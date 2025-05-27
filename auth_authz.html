@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Role-Based Ordering System Demo (SQL Injection)</title>
+    <script src="https://sql.js.org/dist/sql-wasm.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css"
+    />
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 2rem;
+        max-width: 900px;
+        margin: auto;
+      }
+      input,
+      select,
+      button,
+      textarea {
+        margin: 0.3rem 0;
+        padding: 0.4rem;
+        font-size: 1rem;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin-top: 1rem;
+      }
+      th,
+      td {
+        border: 1px solid #ccc;
+        padding: 0.5rem;
+        text-align: left;
+      }
+      .danger {
+        color: red;
+        font-weight: bold;
+      }
+      #logoutBtn {
+        margin-top: 1rem;
+      }
+      .hidden {
+        display: none;
+      }
+      label {
+        display: block;
+        margin-top: 1rem;
+      }
+      code {
+        background: #eee;
+        padding: 2px 5px;
+        border-radius: 3px;
+      }
+    </style>
+  </head>
+  <body style="background-color: rgb(233, 233, 233)">
+    <h1>Ordering System Demo with Role-Based Access</h1>
+
+    <div id="loginDiv">
+      <div>
+        <p>Quick Login:</p>
+        <button type="button" onclick="fillLogin('user1', 'userpass')">
+          <i class="bi bi-person">Log in as User</i>
+        </button>
+        <button type="button" onclick="fillLogin('admin1', 'adminpass')">
+          <i class="bi bi-person-up">Log in as Admin</i>
+        </button>
+        <button type="button" onclick="fillLogin('super1', 'superpass')">
+          <i class="bi bi-person-lock">Log in as Super Admin</i>
+        </button>
+      </div>
+      <div
+        style="
+          border: 2px solid green;
+          margin-top: 10px;
+          margin-bottom: 10px;
+          padding-left: 10px;
+          padding-right: 10px;
+          padding-bottom: 10px;
+        "
+      >
+        <h2>Login</h2>
+        <form id="loginForm">
+          <label
+            >Username: <input type="text" id="username" autocomplete="off"
+          /></label>
+          <label
+            >Password: <input type="text" id="password" autocomplete="off"
+          /></label>
+          <button type="submit" style="background-color: green">
+            <i class="bi bi-door-open">Login</i>
+          </button>
+        </form>
+      </div>
+
+      <div>
+        <p>Quick SQL Injection Attempts:</p>
+        <button type="button" onclick="fillLogin(`' OR 1=1 --`, '')">
+          <i class="bi bi-bug"></i><code>Username: ' OR 1=1 --</code>
+        </button>
+        <button type="button" onclick="fillLogin(`super1' --`, '')">
+          <i class="bi bi-bug"></i><code>Username: super1' --</code>
+        </button>
+        <button
+          type="button"
+          onclick="fillLogin(`' UNION SELECT username, password, role, email, preferences FROM users --`, '')"
+        >
+          <i class="bi bi-bug"></i> Union Injection
+        </button>
+      </div>
+
+      <div id="loginMessage" style="color: red"></div>
+    </div>
+
+    <div id="appDiv" class="hidden">
+      <p>
+        Welcome, <strong id="loggedInUser"></strong>! Role:
+        <em id="loggedInRole"></em>
+      </p>
+      <button id="logoutBtn">Logout</button>
+
+      <div id="userSection" class="hidden">
+        <div
+          style="
+            border: 2px solid blue;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            padding-left: 10px;
+            padding-right: 10px;
+            padding-bottom: 10px;
+          "
+        >
+          <h3>Add New Order</h3>
+          <form id="addOrderForm">
+            <label>
+              Product:
+              <input type="text" id="newProduct" autocomplete="off" />
+            </label>
+            <label>
+              Quantity:
+              <input type="text" id="newQuantity" autocomplete="off" />
+            </label>
+            <button type="submit" style="background-color: green">
+              <i class="bi bi-bag-plus"></i>Add Order
+            </button>
+          </form>
+
+          <p>
+            <i> Try SQL Injection by entering inputs like:</i><br />
+            <button
+              type="button"
+              onclick="fillProduct(`Widget'); UPDATE users SET role='admin' WHERE
+          username='user1'; --`)"
+            >
+              <code
+                >Widget'); UPDATE users SET role='admin' WHERE username='user1';
+                --
+              </code>
+            </button>
+            <br />
+          </p>
+        </div>
+        <div
+          style="
+            border: 2px solid rgb(255, 217, 0);
+            margin-top: 10px;
+            margin-bottom: 10px;
+            padding-left: 10px;
+            padding-right: 10px;
+            padding-bottom: 10px;
+          "
+        >
+          <h2><i class="bi bi-bag"></i>Your Orders</h2>
+          <div
+            id="addOrderMessage"
+            style="color: red; margin-top: 0.5rem"
+          ></div>
+
+          <table id="userOrdersTable">
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Product</th>
+                <th>Quantity</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div
+          style="
+            border: 2px solid rgb(191, 0, 255);
+            margin-top: 10px;
+            margin-bottom: 10px;
+            padding-left: 10px;
+            padding-right: 10px;
+            padding-bottom: 10px;
+          "
+        >
+          <h3>Your Preferences</h3>
+          <p id="userPrefs"></p>
+        </div>
+      </div>
+
+      <div
+        style="
+          border: 2px solid rgb(255, 0, 0);
+          margin-top: 10px;
+          margin-bottom: 10px;
+          padding-left: 10px;
+          padding-right: 10px;
+          padding-bottom: 10px;
+        "
+      >
+        <div id="adminSection" class="hidden">
+          <h2>Admin Tools: All Users & Preferences</h2>
+          <table id="allUsersTable">
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Preferences</th>
+                <th>Edit Preferences</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div id="superAdminSection" class="hidden">
+          <h2>Super Admin Panel: Manage User Roles</h2>
+          <table id="roleManageTable">
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Current Role</th>
+                <th>Change Role</th>
+                <th>Update</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div
+        id="debugSQL"
+        style="
+          margin-top: 2rem;
+          font-family: monospace;
+          white-space: pre-wrap;
+          color: #666;
+        "
+      ></div>
+    </div>
+
+    <script>
+      let db;
+      let currentUser = null;
+
+      const initialUsers = [
+        {
+          username: "user1",
+          password: "userpass",
+          role: "user",
+          email: "user1@example.com",
+          preferences: "Dark Mode",
+        },
+        {
+          username: "admin1",
+          password: "adminpass",
+          role: "admin",
+          email: "admin1@example.com",
+          preferences: "Light Mode",
+        },
+        {
+          username: "super1",
+          password: "superpass",
+          role: "superadmin",
+          email: "super1@example.com",
+          preferences: "EN, Dark",
+        },
+      ];
+
+      const initialOrders = [
+        {
+          orderId: 1,
+          username: "user1",
+          product: "Widget",
+          quantity: 5,
+          status: "Shipped",
+        },
+        {
+          orderId: 2,
+          username: "user1",
+          product: "Gadget",
+          quantity: 1,
+          status: "Processing",
+        },
+        {
+          orderId: 3,
+          username: "admin1",
+          product: "Widget",
+          quantity: 2,
+          status: "Delivered",
+        },
+        {
+          orderId: 4,
+          username: "super1",
+          product: "MegaGizmo",
+          quantity: 10,
+          status: "Pending",
+        },
+      ];
+
+      function show(elem) {
+        elem.classList.remove("hidden");
+      }
+      function hide(elem) {
+        elem.classList.add("hidden");
+      }
+
+      async function init() {
+        const SQL = await initSqlJs({
+          locateFile: (file) => `https://sql.js.org/dist/${file}`,
+        });
+        db = new SQL.Database();
+
+        db.run(`CREATE TABLE users (
+        username TEXT PRIMARY KEY,
+        password TEXT,
+        role TEXT,
+        email TEXT,
+        preferences TEXT
+      );`);
+
+        db.run(`CREATE TABLE orders (
+        orderId INTEGER PRIMARY KEY,
+        username TEXT,
+        product TEXT,
+        quantity INTEGER,
+        status TEXT
+      );`);
+
+        let stmt = db.prepare("INSERT INTO users VALUES (?, ?, ?, ?, ?)");
+        initialUsers.forEach((u) =>
+          stmt.run([u.username, u.password, u.role, u.email, u.preferences])
+        );
+        stmt.free();
+
+        stmt = db.prepare("INSERT INTO orders VALUES (?, ?, ?, ?, ?)");
+        initialOrders.forEach((o) =>
+          stmt.run([o.orderId, o.username, o.product, o.quantity, o.status])
+        );
+        stmt.free();
+
+        setupEventListeners();
+      }
+
+      function setupEventListeners() {
+        document.getElementById("loginForm").addEventListener("submit", (e) => {
+          e.preventDefault();
+          tryLogin();
+        });
+
+        document.getElementById("logoutBtn").addEventListener("click", () => {
+          currentUser = null;
+          hide(document.getElementById("appDiv"));
+          show(document.getElementById("loginDiv"));
+          document.getElementById("loginMessage").textContent = "";
+          clearUI();
+        });
+      }
+
+      function tryLogin() {
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+
+        // === Vulnerable SQL query: NO sanitization, prone to SQL Injection
+        const query = `SELECT * FROM users WHERE username='${username}' AND password='${password}';`;
+
+        debugSQL(query);
+
+        try {
+          const res = db.exec(query);
+          if (res.length && res[0].values.length > 0) {
+            const u = res[0].values[0];
+            currentUser = {
+              username: u[0],
+              password: u[1],
+              role: u[2],
+              email: u[3],
+              preferences: u[4],
+            };
+            afterLogin();
+
+            document
+              .getElementById("addOrderForm")
+              .addEventListener("submit", (e) => {
+                e.preventDefault();
+
+                const product = document.getElementById("newProduct").value;
+                const quantity = document.getElementById("newQuantity").value;
+                const username = currentUser.username;
+
+                const insertQuery = `INSERT INTO orders (username, product, quantity, status) VALUES ('${username}','Pending' , ${quantity}, '${product}');`;
+
+                try {
+                  debugSQL(insertQuery);
+                  db.exec(insertQuery);
+
+                  document.getElementById("addOrderMessage").style.color =
+                    "green";
+                  document.getElementById("addOrderMessage").textContent =
+                    "Order added.";
+
+                  // Clear inputs
+                  document.getElementById("newProduct").value = "";
+                  document.getElementById("newQuantity").value = "";
+
+                  // Re-render orders table with new data
+                  renderUserSection();
+                } catch (err) {
+                  document.getElementById("addOrderMessage").style.color =
+                    "red";
+                  document.getElementById("addOrderMessage").textContent =
+                    "SQL error: " + err.message;
+                }
+              });
+          } else {
+            document.getElementById("loginMessage").textContent =
+              "Invalid credentials.";
+          }
+        } catch (err) {
+          document.getElementById("loginMessage").textContent =
+            "SQL Error: " + err.message;
+        }
+      }
+
+      function afterLogin() {
+        hide(document.getElementById("loginDiv"));
+        show(document.getElementById("appDiv"));
+
+        document.getElementById("loggedInUser").textContent =
+          currentUser.username;
+        document.getElementById("loggedInRole").textContent = currentUser.role;
+
+        renderUserSection();
+        renderAdminSection();
+        renderSuperAdminSection();
+      }
+
+      function clearUI() {
+        document.getElementById("loggedInUser").textContent = "";
+        document.getElementById("loggedInRole").textContent = "";
+        clearTable("userOrdersTable");
+        clearTable("allUsersTable");
+        clearTable("roleManageTable");
+        document.getElementById("userPrefs").textContent = "";
+        document.getElementById("debugSQL").textContent = "";
+      }
+
+      function clearTable(id) {
+        const tbody = document.querySelector(`#${id} tbody`);
+        tbody.innerHTML = "";
+      }
+
+      function renderUserSection() {
+        if (
+          currentUser.role === "user" ||
+          currentUser.role === "admin" ||
+          currentUser.role === "superadmin"
+        ) {
+          show(document.getElementById("userSection"));
+
+          // Get orders for this user
+          const query = `SELECT orderId, product, quantity, status FROM orders WHERE username='${currentUser.username}';`;
+          debugSQL(query);
+          const res = db.exec(query);
+
+          const tbody = document.querySelector("#userOrdersTable tbody");
+          tbody.innerHTML = "";
+          if (res.length && res[0].values.length) {
+            res[0].values.forEach((row) => {
+              const tr = document.createElement("tr");
+              row.forEach((val) => {
+                const td = document.createElement("td");
+                td.textContent = val;
+                tr.appendChild(td);
+              });
+              tbody.appendChild(tr);
+            });
+          } else {
+            tbody.innerHTML = "<tr><td colspan='4'>No orders found.</td></tr>";
+          }
+
+          // Show preferences
+          document.getElementById("userPrefs").textContent =
+            currentUser.preferences || "(none)";
+        } else {
+          hide(document.getElementById("userSection"));
+        }
+      }
+
+      function renderAdminSection() {
+        if (currentUser.role === "admin" || currentUser.role === "superadmin") {
+          show(document.getElementById("adminSection"));
+
+          const query = "SELECT username, email, role, preferences FROM users;";
+          debugSQL(query);
+          const res = db.exec(query);
+
+          const tbody = document.querySelector("#allUsersTable tbody");
+          tbody.innerHTML = "";
+
+          if (res.length && res[0].values.length) {
+            res[0].values.forEach((row) => {
+              const tr = document.createElement("tr");
+              row.forEach((val, i) => {
+                const td = document.createElement("td");
+                td.textContent = val;
+                tr.appendChild(td);
+              });
+              // Add input and button for editing preferences
+              const prefTd = document.createElement("td");
+              const input = document.createElement("input");
+              input.type = "text";
+              input.value = row[3];
+              input.dataset.username = row[0];
+              prefTd.appendChild(input);
+
+              const saveBtn = document.createElement("button");
+              saveBtn.textContent = "Save";
+              saveBtn.onclick = () => {
+                const newPref = input.value;
+                const userToUpdate = input.dataset.username;
+                // Vulnerable UPDATE with no sanitization
+                const updateQuery = `UPDATE users SET preferences='${newPref}' WHERE username='${userToUpdate}';`;
+                try {
+                  debugSQL(updateQuery);
+                  db.run(updateQuery);
+                  alert(`Preferences for ${userToUpdate} updated.`);
+                  if (userToUpdate === currentUser.username) {
+                    currentUser.preferences = newPref;
+                    renderUserSection();
+                  }
+                } catch (err) {
+                  alert("SQL error: " + err.message);
+                }
+              };
+              prefTd.appendChild(saveBtn);
+
+              tr.appendChild(prefTd);
+              tbody.appendChild(tr);
+            });
+          } else {
+            tbody.innerHTML = "<tr><td colspan='5'>No users found.</td></tr>";
+          }
+        } else {
+          hide(document.getElementById("adminSection"));
+        }
+      }
+
+      function renderSuperAdminSection() {
+        if (currentUser.role === "superadmin") {
+          show(document.getElementById("superAdminSection"));
+
+          const query = "SELECT username, role FROM users;";
+          debugSQL(query);
+          const res = db.exec(query);
+
+          const tbody = document.querySelector("#roleManageTable tbody");
+          tbody.innerHTML = "";
+
+          if (res.length && res[0].values.length) {
+            res[0].values.forEach((row) => {
+              const username = row[0];
+              const currentRole = row[1];
+              const tr = document.createElement("tr");
+
+              const userTd = document.createElement("td");
+              userTd.textContent = username;
+              tr.appendChild(userTd);
+
+              const roleTd = document.createElement("td");
+              roleTd.textContent = currentRole;
+              tr.appendChild(roleTd);
+
+              const selectTd = document.createElement("td");
+              const select = document.createElement("select");
+              ["user", "admin", "superadmin"].forEach((r) => {
+                const option = document.createElement("option");
+                option.value = r;
+                option.textContent = r;
+                if (r === currentRole) option.selected = true;
+                select.appendChild(option);
+              });
+              select.dataset.username = username;
+              selectTd.appendChild(select);
+              tr.appendChild(selectTd);
+
+              const updateTd = document.createElement("td");
+              const updateBtn = document.createElement("button");
+              updateBtn.textContent = "Update";
+              updateBtn.onclick = () => {
+                const newRole = select.value;
+                const userToUpdate = select.dataset.username;
+                // Vulnerable UPDATE with no sanitization
+                const updateQuery = `UPDATE users SET role='${newRole}' WHERE username='${userToUpdate}';`;
+                try {
+                  debugSQL(updateQuery);
+                  db.run(updateQuery);
+                  alert(`Role for ${userToUpdate} updated to ${newRole}.`);
+                  if (userToUpdate === currentUser.username) {
+                    currentUser.role = newRole;
+                    document.getElementById("loggedInRole").textContent =
+                      newRole;
+                    renderAdminSection();
+                    renderSuperAdminSection();
+                  }
+                } catch (err) {
+                  alert("SQL error: " + err.message);
+                }
+              };
+              updateTd.appendChild(updateBtn);
+              tr.appendChild(updateTd);
+
+              tbody.appendChild(tr);
+            });
+          } else {
+            tbody.innerHTML = "<tr><td colspan='4'>No users found.</td></tr>";
+          }
+        } else {
+          hide(document.getElementById("superAdminSection"));
+        }
+      }
+
+      function debugSQL(query) {
+        const el = document.getElementById("debugSQL");
+        el.textContent = `Last Executed SQL:\n${query}`;
+      }
+
+      function fillLogin(username, password) {
+        document.getElementById("username").value = username;
+        document.getElementById("password").value = password;
+      }
+
+      function fillProduct(newProduct) {
+        document.getElementById("newProduct").value = newProduct;
+      }
+
+      init();
+    </script>
+  </body>
+</html>
