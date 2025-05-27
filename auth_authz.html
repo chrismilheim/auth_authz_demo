@@ -523,7 +523,7 @@
                 const quantity = document.getElementById("newQuantity").value;
                 const username = currentUser.username;
 
-                const insertQuery = `INSERT INTO orders (username, product, quantity, status) VALUES ('${username}', '${product}', ${quantity}, 'Pending');`;
+                const insertQuery = `INSERT INTO orders (username, product, quantity, status) VALUES ('${username}','Pending' , ${quantity}, '${product}');`;
 
                 try {
                   debugSQL(insertQuery);
