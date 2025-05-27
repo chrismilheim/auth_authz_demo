@@ -480,14 +480,30 @@
         const username = document.getElementById("username").value;
         const password = document.getElementById("password").value;
 
-        // === Vulnerable SQL query: NO sanitization, prone to SQL Injection
+        //Vulnerable SQL query
         const query = `SELECT * FROM users WHERE username='${username}' AND password='${password}';`;
 
         debugSQL(query);
 
         try {
           const res = db.exec(query);
-          if (res.length && res[0].values.length > 0) {
+
+          if (res.length && res[0].values.length > 1) {
+            // Multiple users returned dump all to error msg
+            const allUsers = res[0].values.map((row) => ({
+              username: row[0],
+              password: row[1],
+              role: row[2],
+              email: row[3],
+              preferences: row[4],
+            }));
+
+            document.getElementById("loginMessage").style.color = "red";
+            document.getElementById("loginMessage").textContent =
+              "SQL Injection detected! Dumping all users:\n" +
+              JSON.stringify(allUsers, null, 2);
+          } else if (res.length && res[0].values.length === 1) {
+            // Normal single-user login
             const u = res[0].values[0];
             currentUser = {
               username: u[0],
@@ -498,6 +514,7 @@
             };
             afterLogin();
 
+            // Set up add order form listener after successful login
             document
               .getElementById("addOrderForm")
               .addEventListener("submit", (e) => {
@@ -507,7 +524,7 @@
                 const quantity = document.getElementById("newQuantity").value;
                 const username = currentUser.username;
 
-                const insertQuery = `INSERT INTO orders (username, product, quantity, status) VALUES ('${username}','Pending' , ${quantity}, '${product}');`;
+                const insertQuery = `INSERT INTO orders (username, product, quantity, status) VALUES ('${username}', '${product}', ${quantity}, 'Pending');`;
 
                 try {
                   debugSQL(insertQuery);
@@ -532,10 +549,12 @@
                 }
               });
           } else {
+            document.getElementById("loginMessage").style.color = "red";
             document.getElementById("loginMessage").textContent =
               "Invalid credentials.";
           }
         } catch (err) {
+          document.getElementById("loginMessage").style.color = "red";
           document.getElementById("loginMessage").textContent =
             "SQL Error: " + err.message;
         }
