@@ -157,14 +157,14 @@
           <label
             >Password: <input type="text" id="password" autocomplete="off"
           /></label>
-          <button type="submit" style="background-color: green">
+          <button type="submit" style="color: green">
             <i class="bi bi-door-open">Login</i>
           </button>
         </form>
       </div>
 
       <div>
-        <i>Quick SQL Injection Attempts:</i><br />
+        <i>Quick SQL Injection Bugs:</i><br />
         <button type="button" onclick="fillLogin(`' OR 1=1 --`, '')">
           <i class="bi bi-bug"></i><code>Username: ' OR 1=1 --</code>
         </button>
@@ -186,13 +186,13 @@
       <p>
         Welcome, <strong id="loggedInUser"></strong>! Role:
         <em id="loggedInRole"></em>
+        <button
+          id="logoutBtn"
+          style="color: red; background-color: rgba(255, 166, 0, 0.487)"
+        >
+          Logout <i class="bi bi-box-arrow-right"></i>
+        </button>
       </p>
-      <button
-        id="logoutBtn"
-        style="color: red; background-color: rgba(255, 166, 0, 0.487)"
-      >
-        Logout <i class="bi bi-box-arrow-right"></i>
-      </button>
 
       <div id="userSection" class="hidden">
         <div
@@ -215,18 +215,19 @@
               Quantity:
               <input type="text" id="newQuantity" autocomplete="off" />
             </label>
-            <button type="submit" style="background-color: green">
+            <button type="submit" style="color: green">
               <i class="bi bi-bag-plus"></i>Add Order
             </button>
           </form>
 
           <p>
-            <i> Try SQL Injection by entering inputs like:</i><br />
+            <i> Quick SQL Injection Bugs:</i><br />
             <button
               type="button"
               onclick="fillProduct(`Widget'); UPDATE users SET role='admin' WHERE
           username='user1'; --`)"
             >
+              <i class="bi bi-bug"></i>
               <code
                 >Widget'); UPDATE users SET role='admin' WHERE username='user1';
                 --
@@ -279,8 +280,12 @@
             Update Your Preferences:
             <input type="text" id="userPrefInput" />
           </label>
-          <button type="button" onclick="saveUserPreference()">
-            Save Preference
+          <button
+            type="button"
+            onclick="saveUserPreference()"
+            style="color: green"
+          >
+            <i class="bi bi-gear"></i> Save Preference
           </button>
         </div>
       </div>
@@ -630,6 +635,7 @@
 
               const saveBtn = document.createElement("button");
               saveBtn.textContent = "Save";
+              saveBtn.style = "color:green";
               saveBtn.onclick = () => {
                 const newPref = input.value;
                 const userToUpdate = input.dataset.username;
@@ -701,6 +707,7 @@
               const updateTd = document.createElement("td");
               const updateBtn = document.createElement("button");
               updateBtn.textContent = "Update";
+              updateBtn.style = "color:green";
               updateBtn.onclick = () => {
                 const newRole = select.value;
                 const userToUpdate = select.dataset.username;
