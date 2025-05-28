@@ -207,121 +207,123 @@
             Logout <i class="bi bi-box-arrow-right"></i>
           </button>
         </p>
+        <div style="border: 2px solid blue">
+          <div id="userSection" class="hidden">
+            <div
+              style="
+                margin-top: 10px;
+                margin-bottom: 10px;
+                padding-left: 10px;
+                padding-right: 10px;
+                padding-bottom: 10px;
+              "
+            >
+              <h2><i class="bi bi-bag-plus"></i><u>Add New Orde</u>r</h2>
+              <form id="addOrderForm">
+                <label>
+                  Product:
+                  <input type="text" id="newProduct" autocomplete="off" />
+                </label>
+                <label>
+                  Quantity:
+                  <input type="text" id="newQuantity" autocomplete="off" />
+                </label>
+                <button type="submit" style="color: green">
+                  <i class="bi bi-bag-plus"></i>Add Order
+                </button>
+              </form>
 
-        <div id="userSection" class="hidden">
-          <div
-            style="
-              border: 2px solid blue;
-              margin-top: 10px;
-              margin-bottom: 10px;
-              padding-left: 10px;
-              padding-right: 10px;
-              padding-bottom: 10px;
-            "
-          >
-            <h2><i class="bi bi-bag-plus"></i>Add New Order</h2>
-            <form id="addOrderForm">
-              <label>
-                Product:
-                <input type="text" id="newProduct" autocomplete="off" />
-              </label>
-              <label>
-                Quantity:
-                <input type="text" id="newQuantity" autocomplete="off" />
-              </label>
-              <button type="submit" style="color: green">
-                <i class="bi bi-bag-plus"></i>Add Order
-              </button>
-            </form>
+              <p>
+                <i> Quick SQL Injection Bugs:</i><br />
+                <button
+                  type="button"
+                  onclick="fillProduct(`Widget'); UPDATE users SET role='admin' WHERE
+          username='user1'; --`)"
+                >
+                  <i class="bi bi-bug"></i>
+                  <code
+                    >Widget'); UPDATE users SET role='admin' WHERE
+                    username='user1'; --
+                  </code>
+                </button>
+                <br />
+              </p>
+            </div>
+            <div
+              style="
+                margin-top: 10px;
+                margin-bottom: 10px;
+                padding-left: 10px;
+                padding-right: 10px;
+                padding-bottom: 10px;
+              "
+            >
+              <h2>
+                <u><i class="bi bi-bag"></i>Your Orders</u>
+              </h2>
+              <div
+                id="addOrderMessage"
+                style="color: red; margin-top: 0.5rem"
+              ></div>
 
-            <p>
-              <i> Quick SQL Injection Bugs:</i><br />
+              <table id="userOrdersTable">
+                <thead>
+                  <tr>
+                    <th>Order ID</th>
+                    <th>Product</th>
+                    <th>Quantity</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <div
+              style="
+                margin-top: 10px;
+                margin-bottom: 10px;
+                padding-left: 10px;
+                padding-right: 10px;
+                padding-bottom: 10px;
+              "
+            >
+              <h2><i class="bi bi-gear"></i><u>Your Preferences</u></h2>
+              <p id="userPrefs"></p>
+              <label>
+                Update Your Preferences:
+                <input type="text" id="userPrefInput" />
+              </label>
               <button
                 type="button"
-                onclick="fillProduct(`Widget'); UPDATE users SET role='admin' WHERE
-          username='user1'; --`)"
+                onclick="saveUserPreference()"
+                style="color: green"
               >
-                <i class="bi bi-bug"></i>
-                <code
-                  >Widget'); UPDATE users SET role='admin' WHERE
-                  username='user1'; --
-                </code>
+                <i class="bi bi-gear"></i> Save Preference
               </button>
-              <br />
-            </p>
-          </div>
-          <div
-            style="
-              border: 2px solid rgb(255, 217, 0);
-              margin-top: 10px;
-              margin-bottom: 10px;
-              padding-left: 10px;
-              padding-right: 10px;
-              padding-bottom: 10px;
-            "
-          >
-            <h2><i class="bi bi-bag"></i>Your Orders</h2>
-            <div
-              id="addOrderMessage"
-              style="color: red; margin-top: 0.5rem"
-            ></div>
-
-            <table id="userOrdersTable">
-              <thead>
-                <tr>
-                  <th>Order ID</th>
-                  <th>Product</th>
-                  <th>Quantity</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody></tbody>
-            </table>
-          </div>
-          <div
-            style="
-              border: 2px solid rgb(191, 0, 255);
-              margin-top: 10px;
-              margin-bottom: 10px;
-              padding-left: 10px;
-              padding-right: 10px;
-              padding-bottom: 10px;
-            "
-          >
-            <h2><i class="bi bi-gear"></i>Your Preferences</h2>
-            <p id="userPrefs"></p>
-            <label>
-              Update Your Preferences:
-              <input type="text" id="userPrefInput" />
-            </label>
-            <button
-              type="button"
-              onclick="saveUserPreference()"
-              style="color: green"
-            >
-              <i class="bi bi-gear"></i> Save Preference
-            </button>
+            </div>
           </div>
         </div>
-
-        <div
-          style="
-            border: 2px solid rgb(255, 0, 0);
-            margin-top: 10px;
-            margin-bottom: 10px;
-            padding-left: 10px;
-            padding-right: 10px;
-            padding-bottom: 10px;
-          "
-        >
+        <div style="">
           <div
             id="adminSection"
             class="hidden"
-            style="max-width: 100%; padding: 1rem"
+            style="
+              max-width: 100%;
+              padding: 1rem;
+              border: 2px solid rgb(255, 166, 0);
+              margin-top: 10px;
+              margin-bottom: 10px;
+              padding-left: 10px;
+              padding-right: 10px;
+              padding-bottom: 10px;
+            "
           >
             <h2>
-              <i class="bi bi-person-up"></i>Admin Tools: All Users &
-              Preferences
+              <i class="bi bi-person-up"></i
+              ><u
+                ><u style="color: orange">Admin Tools:</u> All Users &
+                Preferences</u
+              >
             </h2>
             <div
               style="
@@ -352,10 +354,26 @@
             </div>
           </div>
 
-          <div id="superAdminSection" class="hidden">
+          <div
+            id="superAdminSection"
+            class="hidden"
+            style="
+              max-width: 100%;
+              padding: 1rem;
+              border: 2px solid rgb(255, 0, 0);
+              margin-top: 10px;
+              margin-bottom: 10px;
+              padding-left: 10px;
+              padding-right: 10px;
+              padding-bottom: 10px;
+            "
+          >
             <h2>
-              <i class="bi bi-person-lock"></i>Super Admin Panel: Manage User
-              Roles
+              <i class="bi bi-person-lock"></i
+              ><u
+                ><u style="color: red">Super Admin Panel:</u> Manage User
+                Roles</u
+              >
             </h2>
             <table id="roleManageTable">
               <thead>
